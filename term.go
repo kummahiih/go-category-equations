@@ -4,24 +4,35 @@ import (
 	"fmt"
 )
 
+// ProcessedTerm contains a description of the processed arithmetic operation which has lead to some term
 type ProcessedTerm interface {
+	// GetSink returns the sink of the done operation
 	GetSink() Category
+	// GetOperation returns the done operation
 	GetOperation() Operation
+	// GetSource returns the source of the done operation
 	GetSource() Category
+	// Equals returns true, if the operation had the same parameters
 	Equals(another ProcessedTerm) bool
+	// String returns a human readable description of the done operation
 	String() string
 }
 
+// Operation is used to identify the different operations one can make to the category equation terms
 type Operation int
 
 const (
+	// ADD denotes the Union -operation
 	ADD Operation = iota
+	// DISCARD denotes the DiscardAll  -operation
 	DISCARD
+	// ARROW denotes the Connect -operation
 	ARROW
 )
 
 // Helper functions for Operation
 
+// O2S returns a string representetion of the given operation
 func O2S(op Operation) string {
 	switch op {
 	case ADD:
@@ -34,10 +45,12 @@ func O2S(op Operation) string {
 	panic("invalid operation")
 }
 
+// EqualOperators returns true, if the Ids are same
 func EqualOperators(f Operator, another Operator) bool {
 	return f.GetId() == another.GetId()
 }
 
+// CompatibleOperators returns an error, if the connection operators are not same
 func CompatibleOperators(f Operator, another Operator) error {
 	if !EqualOperators(f, another) {
 		return fmt.Errorf("Expected operator %s, got %s", f.GetId(), another.GetId())
@@ -45,6 +58,7 @@ func CompatibleOperators(f Operator, another Operator) error {
 	return nil
 }
 
+// NewProcessedTerm returns a new ProcessedTerm instance
 func NewProcessedTerm(source Category, operation Operation, sink Category) ProcessedTerm {
 	return &processedTerm{
 		Source:    source,
@@ -52,7 +66,7 @@ func NewProcessedTerm(source Category, operation Operation, sink Category) Proce
 		Operation: operation}
 }
 
-// EquationTerm is on categoryequations.go for the sake of documentation
+// NewIdentityTerm returns a new identity term instance
 func NewIdentityTerm(operator Operator) EquationTerm {
 	return &equationTerm{
 		categoryImpl: categoryImpl{
@@ -66,6 +80,7 @@ func NewIdentityTerm(operator Operator) EquationTerm {
 		processedTerm: nil}
 }
 
+// NewZeroTerm returns a new zero term instance
 func NewZeroTerm(operator Operator) EquationTerm {
 	return &equationTerm{
 		categoryImpl: categoryImpl{
@@ -79,6 +94,7 @@ func NewZeroTerm(operator Operator) EquationTerm {
 		processedTerm: nil}
 }
 
+// NewWrapperTerm returns a new Connectable wrapping term instance
 func NewWrapperTerm(operator Operator, connectable Connectable) EquationTerm {
 	sources := NewConnectableSet()
 	sources.Add(connectable)
@@ -98,6 +114,7 @@ func NewWrapperTerm(operator Operator, connectable Connectable) EquationTerm {
 		processedTerm: nil}
 }
 
+// NewIntermediateTerm returns a new intermediate term. Used on the aritmethic operation implementations
 func NewIntermediateTerm(
 	operator Operator,
 	sources ConnectableSet,
@@ -111,8 +128,7 @@ func NewIntermediateTerm(
 			Operator:   operator,
 			Operations: operations,
 			isZero:     false,
-			isIdentity: processedTerm != nil && processedTerm.GetOperation() == ADD && (
-				processedTerm.GetSink().IsIdentity() || processedTerm.GetSource().IsIdentity()),
+			isIdentity: processedTerm != nil && processedTerm.GetOperation() == ADD && (processedTerm.GetSink().IsIdentity() || processedTerm.GetSource().IsIdentity()),
 			stringImpl: func(c *categoryImpl) string { return processedTerm.String() }},
 		processedTerm: processedTerm}
 }
@@ -203,7 +219,7 @@ func (e *equationTerm) Connect(anext Category) EquationTerm {
 	for _, source := range anext.GetSources().AsArray() {
 		newSources.Add(source)
 	}
-	if (anext.IsIdentity()) { // a -> (I+b)
+	if anext.IsIdentity() { // a -> (I+b)
 		for _, source := range e.GetSources().AsArray() {
 			newSources.Add(source)
 		}
@@ -214,7 +230,7 @@ func (e *equationTerm) Connect(anext Category) EquationTerm {
 		newSinks.Add(sink)
 	}
 
-	if (e.IsIdentity()) { // (a+I) -> b
+	if e.IsIdentity() { // (a+I) -> b
 		for _, sink := range anext.GetSinks().AsArray() {
 			newSinks.Add(sink)
 		}

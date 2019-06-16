@@ -5,17 +5,34 @@
 
 package category
 
+import (
+	"sort"
+	"strings"
+)
+
+// ConnectableSet contains a set of operations and a set of set operations for the connectable set
 type ConnectableSet interface {
+	// Union is a set union. Returns a new set
 	Union(another ConnectableSet) ConnectableSet
+	// DiscardAll removes all instances of the another set from this one and returns it as a new
 	DiscardAll(another ConnectableSet) ConnectableSet
+	// Clone clones the set
 	Clone() ConnectableSet
+	// Add adds an item to this set
 	Add(f Connectable)
+	// Remove removes and item from this set
 	Remove(f Connectable)
+	// Equals is a set equality check
 	Equals(another ConnectableSet) bool
+	// AsArray returns the operations as an array
 	AsArray() []Connectable
+	// AsSortedArray returns the operations as a sorted array
+	AsSortedArray() []Connectable
+	// String prints the content of the ConnectableSet in an human understable form. Don't use for serialization
 	String() string
 }
 
+// NewConnectableSet creates a new ConnectableSet instance
 func NewConnectableSet() ConnectableSet {
 	return newConnectableSetFromArray([]Connectable{})
 }
@@ -102,10 +119,20 @@ func (fs *connectableSet) AsArray() []Connectable {
 	return values
 }
 
+func (fs *connectableSet) AsSortedArray() []Connectable {
+	arr := fs.AsArray()
+	sort.Slice(arr, func(i, j int) bool {
+		cmpOp := strings.Compare(arr[i].GetId(), arr[j].GetId())
+		return cmpOp < 0
+	})
+
+	return arr
+}
+
 func (fs *connectableSet) String() string {
 	ret := ""
-	for k, _ := range fs.Connectables {
-		ret = ret + k + ","
+	for _, v := range fs.AsSortedArray() {
+		ret = ret + v.GetId() + ","
 	}
 	return ret
 }

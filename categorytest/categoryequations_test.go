@@ -178,7 +178,7 @@ func TestEquationSinksAndSources(t *testing.T) {
 		t.Fatalf("sinks problem")
 	}
 
-	if second.GetSinks().String() != "d,c," {
+	if second.GetSinks().String() != "c,d," {
 		t.Fatalf("sinks problem")
 	}
 }

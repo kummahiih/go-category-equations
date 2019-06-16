@@ -11,34 +11,48 @@ import (
 	"strings"
 )
 
+// FreezedOperation is used to contain planned connection operation from source to sink
 type FreezedOperation interface {
+	// GetSource returns the source of the planned connection operation
 	GetSource() Connectable
+	// GetSource returns the sink of the planned connection operation
 	GetSink() Connectable
+	// GetOperator returns the connection operation
+	GetOperator() Operator
+	// Evaluate executes the planned connection operation, which may fail
 	Evaluate() error
+	// Equals returns true if the sink, source and operation are equal
 	Equals(another FreezedOperation) bool
-	GetOperator() Operator
 }
 
+// OperationSet contains a set of operations and a set of set operations for the operations set
 type OperationSet interface {
+	// Union is a set union. Returns a new set
 	Union(another OperationSet) OperationSet
+	// DiscardAll removes all instances of the another set from this one and returns it as a new
 	DiscardAll(another OperationSet) OperationSet
+	// Clone clones the set
 	Clone() OperationSet
-	//inplce add
+	// Add adds an item to this set
 	Add(f FreezedOperation)
-	//inplace remove
+	// Remove removes and item from this set
 	Remove(f FreezedOperation)
-
+	// Equals is a set equality check
 	Equals(another OperationSet) bool
-
+	// AsArray returns the operations as an array
 	AsArray() []FreezedOperation
+	// AsSortedArray returns the operations as a sorted array
 	AsSortedArray() []FreezedOperation
+	// GetOperator returns the connection operation
 	GetOperator() Operator
 }
 
+// NewFreezedOperation creates a new FreezedOperation instance
 func NewFreezedOperation(operator Operator, source Connectable, sink Connectable) FreezedOperation {
 	return &freezedOperation{Source: source, Sink: sink, Operator: operator}
 }
 
+// NewOperationSet creates a new OperationSet instance
 func NewOperationSet(operator Operator) OperationSet {
 	return &operationSet{
 		Operator:          operator,
