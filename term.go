@@ -114,7 +114,7 @@ func NewWrapperTerm(operator Operator, connectable Connectable) EquationTerm {
 		processedTerm: nil}
 }
 
-// NewIntermediateTerm returns a new intermediate term. Used on the aritmethic operation implementations
+// NewIntermediateTerm returns a new intermediate term. Used on the arithmetic operation implementations
 func NewIntermediateTerm(
 	operator Operator,
 	sources ConnectableSet,
