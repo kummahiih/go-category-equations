@@ -111,7 +111,8 @@ func NewIntermediateTerm(
 			Operator:   operator,
 			Operations: operations,
 			isZero:     false,
-			isIdentity: false,
+			isIdentity: processedTerm != nil && processedTerm.GetOperation() == ADD && (
+				processedTerm.GetSink().IsIdentity() || processedTerm.GetSource().IsIdentity()),
 			stringImpl: func(c *categoryImpl) string { return processedTerm.String() }},
 		processedTerm: processedTerm}
 }
@@ -173,28 +174,12 @@ func (e *equationTerm) Discard(category Category) EquationTerm {
 }
 
 func (e *equationTerm) Connect(anext Category) EquationTerm {
-	if e.IsIdentity() {
-		return NewIntermediateTerm(
-			anext.GetOperator(),
-			anext.GetSources().Clone(),
-			anext.GetSinks().Clone(),
-			anext.GetOperations().Clone(),
-			NewProcessedTerm(e, ARROW, anext))
-	}
 	if e.IsZero() {
 		return NewIntermediateTerm(
 			anext.GetOperator(),
 			anext.GetSources().Clone(),
 			NewConnectableSet(),
 			anext.GetOperations().Clone(),
-			NewProcessedTerm(e, ARROW, anext))
-	}
-	if anext.IsIdentity() {
-		return NewIntermediateTerm(
-			anext.GetOperator(),
-			e.GetSources().Clone(),
-			e.GetSinks().Clone(),
-			e.Operations.Clone(),
 			NewProcessedTerm(e, ARROW, anext))
 	}
 	if anext.IsZero() {
@@ -218,10 +203,21 @@ func (e *equationTerm) Connect(anext Category) EquationTerm {
 	for _, source := range anext.GetSources().AsArray() {
 		newSources.Add(source)
 	}
+	if (anext.IsIdentity()) { // a -> (I+b)
+		for _, source := range e.GetSources().AsArray() {
+			newSources.Add(source)
+		}
+	}
 
 	newSinks := NewConnectableSet()
 	for _, sink := range e.GetSinks().AsArray() {
 		newSinks.Add(sink)
+	}
+
+	if (e.IsIdentity()) { // (a+I) -> b
+		for _, sink := range anext.GetSinks().AsArray() {
+			newSinks.Add(sink)
+		}
 	}
 
 	operations := e.Operations.Union(anext.GetOperations()).Union(newOperations)

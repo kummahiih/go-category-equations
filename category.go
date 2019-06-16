@@ -35,7 +35,7 @@ func (c *categoryImpl) Equals(another Category) bool {
 	return another != nil && EqualOperators(
 		c.Operator, another.GetOperator()) && c.Sources.Equals(
 		another.GetSources()) && c.Sinks.Equals(
-		another.GetSinks())
+		another.GetSinks()) && c.Operations.Equals(another.GetOperations())
 
 }
 func (c *categoryImpl) IsZero() bool {
