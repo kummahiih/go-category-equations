@@ -5,20 +5,33 @@
 
 package category
 
-import (
-//"fmt"
-)
+type ConnectableSet interface {
+	Union(another ConnectableSet) ConnectableSet
+	DiscardAll(another ConnectableSet) ConnectableSet
+	Clone() ConnectableSet
+	Add(f Connectable)
+	Remove(f Connectable)
+	Equals(another ConnectableSet) bool
+	AsArray() []Connectable
+	String() string
+}
+
+func NewConnectableSet() ConnectableSet {
+	return newConnectableSetFromArray([]Connectable{})
+}
+
+// implementation details
 
 type connectableSet struct {
-	Connectables map[Connectable]bool
+	Connectables map[string]Connectable
 }
 
 func newConnectableSetFromArray(operations []Connectable) *connectableSet {
 	aSet := &connectableSet{
-		Connectables: make(map[Connectable]bool, len(operations)),
+		Connectables: make(map[string]Connectable, len(operations)),
 	}
 	for _, v := range operations {
-		aSet.Connectables[v] = true
+		aSet.Connectables[v.GetId()] = v
 	}
 	return aSet
 }
@@ -26,8 +39,8 @@ func newConnectableSetFromArray(operations []Connectable) *connectableSet {
 func (fs *connectableSet) Union(another ConnectableSet) ConnectableSet {
 	operations := another.AsArray()
 
-	for k, _ := range fs.Connectables {
-		operations = append(operations, k)
+	for _, v := range fs.Connectables {
+		operations = append(operations, v)
 	}
 
 	unionSet := newConnectableSetFromArray(operations)
@@ -37,16 +50,16 @@ func (fs *connectableSet) Union(another ConnectableSet) ConnectableSet {
 
 func (fs *connectableSet) DiscardAll(another ConnectableSet) ConnectableSet {
 
-	discardSet := newConnectableSetFromArray(another.AsArray())
+	discardSet := fs.Clone()
 
-	for k, _ := range fs.Connectables {
-		discardSet.Remove(k)
+	for _, v := range another.AsArray() {
+		discardSet.Remove(v)
 	}
 	return discardSet
 }
 
 func (fs *connectableSet) Clone() ConnectableSet {
-	freezeds := make(map[Connectable]bool, len(fs.Connectables))
+	freezeds := make(map[string]Connectable, len(fs.Connectables))
 
 	for k, v := range fs.Connectables {
 		freezeds[k] = v
@@ -56,11 +69,11 @@ func (fs *connectableSet) Clone() ConnectableSet {
 }
 
 func (fs *connectableSet) Add(f Connectable) {
-	fs.Connectables[f] = true
+	fs.Connectables[f.GetId()] = f
 }
 
 func (fs *connectableSet) Remove(f Connectable) {
-	delete(fs.Connectables, f)
+	delete(fs.Connectables, f.GetId())
 }
 
 func (fs *connectableSet) Equals(another ConnectableSet) bool {
@@ -71,7 +84,7 @@ func (fs *connectableSet) Equals(another ConnectableSet) bool {
 	}
 
 	for _, f := range operations {
-		_, found := fs.Connectables[f]
+		_, found := fs.Connectables[f.GetId()]
 		if !found {
 			return false
 		}
@@ -82,8 +95,8 @@ func (fs *connectableSet) Equals(another ConnectableSet) bool {
 func (fs *connectableSet) AsArray() []Connectable {
 	values := make([]Connectable, len(fs.Connectables))
 	i := 0
-	for k, _ := range fs.Connectables {
-		values[i] = k
+	for _, v := range fs.Connectables {
+		values[i] = v
 		i++
 	}
 	return values
@@ -92,7 +105,7 @@ func (fs *connectableSet) AsArray() []Connectable {
 func (fs *connectableSet) String() string {
 	ret := ""
 	for k, _ := range fs.Connectables {
-		ret = ret + k.GetId() + ","
+		ret = ret + k + ","
 	}
 	return ret
 }

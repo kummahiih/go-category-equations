@@ -6,8 +6,60 @@
 package category
 
 import (
-//"fmt"
+	"fmt"
+	"sort"
+	"strings"
 )
+
+type FreezedOperation interface {
+	GetSource() Connectable
+	GetSink() Connectable
+	Evaluate() error
+	Equals(another FreezedOperation) bool
+	GetOperator() Operator
+}
+
+type OperationSet interface {
+	Union(another OperationSet) OperationSet
+	DiscardAll(another OperationSet) OperationSet
+	Clone() OperationSet
+	//inplce add
+	Add(f FreezedOperation)
+	//inplace remove
+	Remove(f FreezedOperation)
+
+	Equals(another OperationSet) bool
+
+	AsArray() []FreezedOperation
+	AsSortedArray() []FreezedOperation
+	GetOperator() Operator
+}
+
+func NewFreezedOperation(operator Operator, source Connectable, sink Connectable) FreezedOperation {
+	return &freezedOperation{Source: source, Sink: sink, Operator: operator}
+}
+
+func NewOperationSet(operator Operator) OperationSet {
+	return &operationSet{
+		Operator:          operator,
+		FreezedOperations: make(map[freezedOperationKey]FreezedOperation),
+	}
+}
+
+// implementation details
+
+type freezedOperationKey struct {
+	Source   string
+	Sink     string
+	Operator string
+}
+
+func getKey(op FreezedOperation) freezedOperationKey {
+	return freezedOperationKey{
+		Source:   op.GetSource().GetId(),
+		Sink:     op.GetSink().GetId(),
+		Operator: op.GetOperator().GetId()}
+}
 
 type freezedOperation struct {
 	Source   Connectable
@@ -29,17 +81,17 @@ func (f *freezedOperation) Equals(another FreezedOperation) bool {
 func (f *freezedOperation) GetOperator() Operator { return f.Operator }
 
 type operationSet struct {
-	FreezedOperations map[FreezedOperation]bool
+	FreezedOperations map[freezedOperationKey]FreezedOperation
 	Operator          Operator
 }
 
 func newOperationSetFromArray(operator Operator, operations []FreezedOperation) *operationSet {
 	aSet := &operationSet{
 		Operator:          operator,
-		FreezedOperations: make(map[FreezedOperation]bool, len(operations)),
+		FreezedOperations: make(map[freezedOperationKey]FreezedOperation, len(operations)),
 	}
 	for _, v := range operations {
-		aSet.FreezedOperations[v] = true
+		aSet.FreezedOperations[getKey(v)] = v
 	}
 	return aSet
 }
@@ -47,8 +99,8 @@ func newOperationSetFromArray(operator Operator, operations []FreezedOperation) 
 func (fs *operationSet) Union(another OperationSet) OperationSet {
 	operations := another.AsArray()
 
-	for k, _ := range fs.FreezedOperations {
-		operations = append(operations, k)
+	for _, v := range fs.FreezedOperations {
+		operations = append(operations, v)
 	}
 
 	unionSet := newOperationSetFromArray(fs.Operator, operations)
@@ -58,16 +110,16 @@ func (fs *operationSet) Union(another OperationSet) OperationSet {
 
 func (fs *operationSet) DiscardAll(another OperationSet) OperationSet {
 
-	discardSet := newOperationSetFromArray(fs.Operator, another.AsArray())
+	discardSet := fs.Clone()
 
-	for k, _ := range fs.FreezedOperations {
-		discardSet.Remove(k)
+	for _, v := range another.AsArray() {
+		discardSet.Remove(v)
 	}
 	return discardSet
 }
 
 func (fs *operationSet) Clone() OperationSet {
-	freezeds := make(map[FreezedOperation]bool, len(fs.FreezedOperations))
+	freezeds := make(map[freezedOperationKey]FreezedOperation, len(fs.FreezedOperations))
 
 	for k, v := range fs.FreezedOperations {
 		freezeds[k] = v
@@ -77,11 +129,12 @@ func (fs *operationSet) Clone() OperationSet {
 }
 
 func (fs *operationSet) Add(f FreezedOperation) {
-	fs.FreezedOperations[f] = true
+	fs.FreezedOperations[getKey(f)] = f
 }
 
 func (fs *operationSet) Remove(f FreezedOperation) {
-	delete(fs.FreezedOperations, f)
+	fmt.Printf("%+v %+v\n", fs.FreezedOperations, f)
+	delete(fs.FreezedOperations, getKey(f))
 }
 
 func (fs *operationSet) Equals(another OperationSet) bool {
@@ -96,7 +149,7 @@ func (fs *operationSet) Equals(another OperationSet) bool {
 	}
 
 	for _, f := range operations {
-		_, found := fs.FreezedOperations[f]
+		_, found := fs.FreezedOperations[getKey(f)]
 		if !found {
 			return false
 		}
@@ -107,11 +160,23 @@ func (fs *operationSet) Equals(another OperationSet) bool {
 func (fs *operationSet) AsArray() []FreezedOperation {
 	values := make([]FreezedOperation, len(fs.FreezedOperations))
 	i := 0
-	for k, _ := range fs.FreezedOperations {
-		values[i] = k
+	for _, v := range fs.FreezedOperations {
+		values[i] = v
 		i++
 	}
 	return values
+}
+
+func (fs *operationSet) AsSortedArray() []FreezedOperation {
+	arr := fs.AsArray()
+	sort.Slice(arr, func(i, j int) bool {
+		cmpOp := strings.Compare(arr[i].GetOperator().GetId(), arr[j].GetOperator().GetId())
+		cmpSource := strings.Compare(arr[i].GetSource().GetId(), arr[j].GetSource().GetId())
+		cmpSink := strings.Compare(arr[i].GetSink().GetId(), arr[j].GetSink().GetId())
+		return (cmpOp < 0) || (cmpOp == 0 && cmpSource < 0) || (cmpOp == 0 && cmpSource == 0 && cmpSink < 0)
+	})
+
+	return arr
 }
 
 func (fs *operationSet) GetOperator() Operator {

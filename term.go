@@ -4,6 +4,118 @@ import (
 	"fmt"
 )
 
+type ProcessedTerm interface {
+	GetSink() Category
+	GetOperation() Operation
+	GetSource() Category
+	Equals(another ProcessedTerm) bool
+	String() string
+}
+
+type Operation int
+
+const (
+	ADD Operation = iota
+	DISCARD
+	ARROW
+)
+
+// Helper functions for Operation
+
+func O2S(op Operation) string {
+	switch op {
+	case ADD:
+		return "+"
+	case DISCARD:
+		return "-"
+	case ARROW:
+		return "*"
+	}
+	panic("invalid operation")
+}
+
+func EqualOperators(f Operator, another Operator) bool {
+	return f.GetId() == another.GetId()
+}
+
+func CompatibleOperators(f Operator, another Operator) error {
+	if !EqualOperators(f, another) {
+		return fmt.Errorf("Expected operator %s, got %s", f.GetId(), another.GetId())
+	}
+	return nil
+}
+
+func NewProcessedTerm(source Category, operation Operation, sink Category) ProcessedTerm {
+	return &processedTerm{
+		Source:    source,
+		Sink:      sink,
+		Operation: operation}
+}
+
+// EquationTerm is on categoryequations.go for the sake of documentation
+func NewIdentityTerm(operator Operator) EquationTerm {
+	return &equationTerm{
+		categoryImpl: categoryImpl{
+			Sources:    NewConnectableSet(),
+			Sinks:      NewConnectableSet(),
+			Operator:   operator,
+			Operations: NewOperationSet(operator),
+			isZero:     false,
+			isIdentity: true,
+			stringImpl: func(c *categoryImpl) string { return "I" }},
+		processedTerm: nil}
+}
+
+func NewZeroTerm(operator Operator) EquationTerm {
+	return &equationTerm{
+		categoryImpl: categoryImpl{
+			Sources:    NewConnectableSet(),
+			Sinks:      NewConnectableSet(),
+			Operator:   operator,
+			Operations: NewOperationSet(operator),
+			isZero:     true,
+			isIdentity: false,
+			stringImpl: func(c *categoryImpl) string { return "O" }},
+		processedTerm: nil}
+}
+
+func NewWrapperTerm(operator Operator, connectable Connectable) EquationTerm {
+	sources := NewConnectableSet()
+	sources.Add(connectable)
+
+	sinks := NewConnectableSet()
+	sinks.Add(connectable)
+
+	return &equationTerm{
+		categoryImpl: categoryImpl{
+			Sources:    sources,
+			Sinks:      sinks,
+			Operator:   operator,
+			Operations: NewOperationSet(operator),
+			isZero:     false,
+			isIdentity: false,
+			stringImpl: func(c *categoryImpl) string { return connectable.GetId() }},
+		processedTerm: nil}
+}
+
+func NewIntermediateTerm(
+	operator Operator,
+	sources ConnectableSet,
+	sinks ConnectableSet,
+	operations OperationSet,
+	processedTerm ProcessedTerm) EquationTerm {
+	return &equationTerm{
+		categoryImpl: categoryImpl{
+			Sources:    sources,
+			Sinks:      sinks,
+			Operator:   operator,
+			Operations: operations,
+			isZero:     false,
+			isIdentity: false,
+			stringImpl: func(c *categoryImpl) string { return processedTerm.String() }},
+		processedTerm: processedTerm}
+}
+
 // implementation details
 
 type processedTerm struct {
