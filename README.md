@@ -1,6 +1,6 @@
 # go-category-equations
 
-An attemp to rewrite the python-domain-equations -library in Golang. 
+An attemp to rewrite the https://github.com/kummahiih/python-category-equations -library in Golang. 
 The library should be fluent to use and have the same tests or more.
 
 ## Usage
