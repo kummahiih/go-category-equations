@@ -2,6 +2,7 @@
 // @copyright: 2019 by Pauli Rikula <pauli.rikula@gmail.com>
 //   @license: MIT <http://www.opensource.org/licenses/mit-license.php>
 //
+
 package categorytest
 
 import (
@@ -9,6 +10,7 @@ import (
 	"fmt"
 )
 
+// Connectable implements the category.Connectable -interface for testing purposes
 type Connectable struct {
 	Id string
 }
@@ -29,6 +31,7 @@ func PrintConnection(a category.Connectable, b category.Connectable) error {
 	return nil
 }
 
+// ConnectionPrinter implements the category.Operator -interface for testing purposes
 type ConnectionPrinter struct {
 }
 
