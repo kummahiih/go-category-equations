@@ -1,11 +1,12 @@
 # go-category-equations
 
 An attemp to rewrite the https://github.com/kummahiih/python-category-equations -library in Golang. 
-The library should be fluent to use and have the same tests or more.
+The library should be fluent to use and have the same tests or more. 
+The full API documentation can be found from https://godoc.org/github.com/kummahiih/go-category-equations .
 
-## Usage
+## Usage Example
 
-Implement 'category.Connectable' and 'category.Operator'. 
+Implement 'category.Connectable' (here 'NewConnectable') and 'category.Operator' (here 'NewConnectionPrinter'). 
 This has been done for tests in 'category/categorytest' 
 and the usage can be seen for example from a test 'TestExampleForDocumentation':
 
