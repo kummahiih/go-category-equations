@@ -1,8 +1,10 @@
 # go-category-equations
 
-An attemp to rewrite the https://github.com/kummahiih/python-category-equations -library in Golang. 
+Rewrite of the https://github.com/kummahiih/python-category-equations -library in Golang. 
 The library should be fluent to use and have the same tests or more. 
 The full API documentation can be found from https://godoc.org/github.com/kummahiih/go-category-equations .
+
+With the tools provided here you can create category like equations for the given operator. On the equations the underlaying 'Add' ('+' on prints) and 'Discard' ('-' on prints) operations are basic set operations called union and discard and the 'Connect' ('*' on prints) operator connects sources to sinks. The equation system also has a Identity 'I' term and zerO -like termination term 'O'. For futher details go https://en.wikipedia.org/wiki/Category_(mathematics)#Definition
 
 ## Usage Example
 
