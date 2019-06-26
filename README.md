@@ -8,9 +8,25 @@ With the tools provided here you can create category like equations for the give
 
 ## Usage Example
 
-Implement 'category.Connectable' (here 'NewConnectable') and 'category.Operator' (here 'NewConnectionPrinter'). 
-This has been done for tests in 'category/categorytest/testprinter.go' 
-and the usage can be seen for example from a test 'TestExampleForDocumentation' which lies in the file 'category/categorytest/categoryequations_test.go':
+Implement 'category.Connectable' (here 'NewConnectable') and 'category.Operator':
+
+	// Connectable has to be implemented in order to use this library.
+	// Connectables are the base items connected by the library.
+	type Connectable interface {
+		// GetId should return unique identifier value for each connectable instance
+		GetId() string
+	}
+
+	// Operator has to be implemented in order to use this library. Operator connects the Connactable objects.
+	type Operator interface {
+		// Evaluate should connect connectable a to connectable: a -> b
+		Evaluate(a Connectable, b Connectable) error
+		// GetId should return unique identifier value for this connection type
+		GetId() string
+	}
+
+
+This has been done for tests in 'category/categorytest/testprinter.go' ('NewConnectable' and 'NewConnectionPrinter') and their usage can be seen for example from a test 'TestExampleForDocumentation' which lies in the file 'category/categorytest/categoryequations_test.go':
 
 	connect := NewConnectionPrinter()
 	G := category.NewEquationFactory(connect)
