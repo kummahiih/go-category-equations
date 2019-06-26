@@ -9,8 +9,8 @@ With the tools provided here you can create category like equations for the give
 ## Usage Example
 
 Implement 'category.Connectable' (here 'NewConnectable') and 'category.Operator' (here 'NewConnectionPrinter'). 
-This has been done for tests in 'category/categorytest' 
-and the usage can be seen for example from a test 'TestExampleForDocumentation':
+This has been done for tests in 'category/categorytest/testprinter.go' 
+and the usage can be seen for example from a test 'TestExampleForDocumentation' which lies in the file 'category/categorytest/categoryequations_test.go':
 
 	connect := NewConnectionPrinter()
 	G := category.NewEquationFactory(connect)
